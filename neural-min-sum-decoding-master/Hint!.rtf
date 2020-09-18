@@ -1,0 +1,55 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2513
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red255\green255\blue254;\red19\green118\blue70;
+\red19\green120\blue72;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;\cssrgb\c100000\c100000\c99608;\cssrgb\c3529\c52549\c34510;
+\cssrgb\c3529\c53333\c35294;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Batch size mempengaruhi rentang SNR yg di running\
+\
+Di kodingan itu informasi sebanyak m, padahal kalau di LDPC codes informasi itu n-m alias k\
+\
+Batch size disesuaikan dengan banyak kolom\
+\
+\
+Rumus buat dapetin nilai codeword berubah jadi \
+\pard\pardeftab720\sl380\partightenfactor0
+
+\f1\fs28 \cf2 \cb3 \expnd0\expndtw0\kerning0
+        codewords = np.mod(np.matmul(G.transpose(), messages.transpose()), \cf4 2\cf2 )\cb1 \
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 \kerning1\expnd0\expndtw0 karena efek dari batch size sama matriks G LDPC codes\
+kalau di NOMS, misal untuk batch size = 10 dan info =4\
+maka message nya punya size (10,4) => [[1011],\'85., x10 ]\
+tapi pas di pembentukkan codeword karena ad pengaruh dari batch_size yang biasanya di LDPC codes untuk message memiliki dimensi 1x4 dan G memiliki dimensi 4x12 sehingga codewords menjadi 1x12\
+\
+TAPI\
+\
+di NOMS, message memiliki dimensi 10x4 karena adanya batch size, sehingga apabila dengan rumus codeword LDPC maka akan menghasilkan matriks codeword dengan ukuran 10x12.\
+Padahal di masukkan NOMS hanya menerima matriks dengan ukuran 12x10, jadi yg kiri harus sesuai dengan N dan yg kanan adalah batch size.\
+\
+trus udh dicek rumus ceknya LDPC jadi gini\
+\pard\pardeftab720\sl380\partightenfactor0
+
+\f1\fs28 \cf2 \cb3 \expnd0\expndtw0\kerning0
+hasil = np.mod(np.matmul(codewords.transpose(), H_matrix.transpose()), \cf5 2\cf2 )\cb1 \
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 \kerning1\expnd0\expndtw0 dan berhasil dapet nilai nol semua, tapi yang aneh.. panjang info yg diterima kalo pake rumus itu jadi sepanjang batch size.\
+\
+hasil simulasinya udah ada, hasilnya jelek bgt.. harus dicek lagi prosesnya trus dia ini pake EbN0\
+\
+\
+24 June 2020 Sekarang tinggal cek apa bedanya yg weigthnya disebar sama engga\
+\
+Kalau weigthnya bener bisa tambah sebagus 10^-1\
+Udh cek pake BCH (63,36)\
+\
+sudah ketemu di tanggal 4 juli 2020, ternyata tinggal bener prosesnya yg salah ad di vc (proses saat di variable node) dalam penghitungan tidak mengindahkan nilai per edges nya. dari edge_order tinggal diubah menjadi extrinsic_order, extrinsic order ini menghitung edge selain edge yg akan dihitung (aturan decoding LDPC) jadi apabila satu node memiliki 2 edge (5,6), maka prosesnya akan dua kali ketika untuk edge 5 maka extrinsic edge nya akan 6 dan untuk edge 6 maka extrinsic edge nya akan 5. Begitu untuk seterusnya.\
+\
+}
